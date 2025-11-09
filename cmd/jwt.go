@@ -37,7 +37,6 @@ func init() {
 
 	flags := jwtCmd.Flags()
 
-
 	// ファイル名
 	flags.StringVarP(&filename, "filename", "f", "jwt.json", "Read file name.")
 	// jwtの生成

@@ -3,6 +3,7 @@ module my-cli
 go 1.25.3
 
 require (
+	github.com/joho/godotenv v1.5.1
 	github.com/spf13/afero v1.15.0
 	github.com/spf13/cobra v1.10.1
 )

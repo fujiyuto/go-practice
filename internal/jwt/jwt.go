@@ -1,12 +1,17 @@
 package jwt
 
 import (
-	"fmt"
-	"time"
+	"crypto/hmac"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
-	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
+	"os"
+	"time"
+	"strings"
 
+	"github.com/joho/godotenv"
 	"github.com/spf13/afero"
 )
 
@@ -82,7 +87,7 @@ func generateJwt(fn string) (string, error) {
 
 	}
 
-	// 発行日時を設定し、有効に設定
+	// 発行日時(タイムスタンプ)を設定し、有効に設定
 	Payload.Iat = time.Now().Unix()
 	Payload.Valid = true
 
@@ -101,5 +106,28 @@ func generateJwt(fn string) (string, error) {
 
 	payload64Encode := base64.StdEncoding.EncodeToString(payloadJsonEncode)
 
-	return fmt.Sprintf("%s.%s\n", header64Encode, payload64Encode), nil
+	// 署名生成
+	signature, err := generateSignature(header64Encode, payload64Encode)
+
+	return strings.Join([]string{header64Encode, payload64Encode, signature}, "."), nil
+}
+
+// 署名(signature)の生成
+func generateSignature(header string, payload string) (string, error) {
+	// .envファイルの読み込み
+	err := godotenv.Load(".env")
+	
+	if err != nil {
+		return "", err
+	}
+
+	// get secret key
+	key := os.Getenv("JWT_SECRET_KEY")
+
+	// create signature
+	mac := hmac.New(sha256.New, []byte(key))
+	mac.Write([]byte(strings.Join([]string{header, payload}, ".")))
+	signature := mac.Sum(nil)
+
+	return hex.EncodeToString(signature), nil
 }
